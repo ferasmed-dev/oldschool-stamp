@@ -27,9 +27,9 @@ stops anyone getting two stamps on the same night. From this the owner's page wo
    ```
    (You can also change the staff PIN later from the owner's page.)
 4. **Keys:** go to *Project Settings → API* and copy the **Project URL** and the **anon / publishable key** into `config.js`.
-5. **Hosting (free):** create a GitHub repo (e.g. `ferasmed-dev/oldschool-card`), upload all the files,
+5. **Hosting (free):** create a GitHub repo (e.g. `ferasmed-dev/oldschool-stamp`), upload all the files,
    then *Settings → Pages → Deploy from branch → main*. Your link will be
-   `https://ferasmed-dev.github.io/oldschool-card/`. (Netlify Drop also works: drag the folder in.)
+   `https://ferasmed-dev.github.io/oldschool-stamp/`. (Netlify Drop also works: drag the folder in.)
 6. Open `owner.html`, sign in with the owner PIN, then **Print poster** to get the QR for the tables.
 
 ## Updating it
