@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16110d">
+<title>Old School Pub · Panel del local</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<style>
+  :root{--bg:#16110d;--bg2:#211913;--bg3:#2c2219;--paper:#f2e6cc;--ink:#2a1d14;--amber:#e9a23b;--red:#a3311f;--muted:#a8957a;--line:#3a2d22;--good:#7fb069}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--paper);font:15px/1.45 "DM Sans",system-ui,sans-serif;
+       padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 40px)}
+  .wrap{max-width:820px;margin:0 auto}
+  h1{font:400 40px/1 "Bebas Neue";letter-spacing:.02em}
+  h2{font:400 24px/1 "Bebas Neue";letter-spacing:.04em;margin-bottom:12px}
+  small.k{display:block;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+  .top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .demo{background:#3b2a12;border:1px dashed #b8741c;color:#f5d29a;font-size:13px;border-radius:10px;padding:9px 12px;margin-bottom:14px}
+  .panel{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+  input,select{font:16px "DM Sans";padding:12px 13px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg3);color:var(--paper);width:100%}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+  .btn{border:0;border-radius:10px;padding:12px 16px;font:700 15px "DM Sans";cursor:pointer;background:var(--amber);color:var(--ink)}
+  .btn.sec{background:var(--bg3);color:var(--paper);border:1px solid var(--line)}
+  .btn.sm{padding:8px 12px;font-size:13px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .err{color:#ff8a70;font-weight:700;font-size:14px;margin-top:10px;min-height:1em}
+  .ok{color:var(--good);font-weight:700;font-size:14px;margin-top:10px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .tile{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .tile b{display:block;font:400 40px/1 "Bebas Neue";letter-spacing:.02em}
+  .tile span{font-size:13px;color:var(--muted)}
+  .chart{position:relative}
+  .chart svg{width:100%;height:auto;display:block;overflow:visible}
+  .tip{position:absolute;pointer-events:none;background:var(--paper);color:var(--ink);font-size:13px;padding:6px 9px;border-radius:8px;
+       white-space:nowrap;transform:translate(-50%,-110%);box-shadow:0 6px 16px #0008}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tabs button{background:var(--bg3);border:1px solid var(--line);color:var(--paper);border-radius:999px;padding:7px 12px;font:500 13px "DM Sans";cursor:pointer}
+  .tabs button.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+  .tablewrap{overflow-x:auto;margin:0 -4px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+  th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;padding:8px 6px;border-bottom:1px solid var(--line)}
+  td{padding:9px 6px;border-bottom:1px solid #2a2018}
+  td.n{text-align:right;font-variant-numeric:tabular-nums} th.n{text-align:right}
+  .pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--bg3);color:var(--muted)}
+  .pill.g{background:#2b3a22;color:#b9dca6} .pill.a{background:#3b2a12;color:#f5d29a} .pill.r{background:#3a1d17;color:#ffb3a1}
+  .muted{color:var(--muted);font-size:13px}
+  .hidden{display:none!important}
+  #qr{background:#fff;padding:12px;border-radius:12px;display:inline-block}
+  #qr img,#qr canvas{display:block;width:180px;height:180px}
+  .poster{display:none}
+  @media print{
+    body{background:#fff;padding:0} .wrap>*:not(.poster){display:none!important}
+    .poster{display:flex!important;flex-direction:column;align-items:center;justify-content:center;height:100vh;color:#000;text-align:center;gap:18px}
+    .poster h1{font-size:90px} .poster p{font-size:26px;max-width:80%} .poster #qrPrint img,.poster #qrPrint canvas{width:360px;height:360px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><small class="k">Panel del local</small><h1 id="barName">Old School Pub</h1></div>
+    <div class="row hidden" id="topBtns"><button class="btn sec sm" id="refreshBtn">Actualizar</button><button class="btn sec sm" id="logoutBtn">Salir</button></div>
+  </div>
+  <div class="demo hidden" id="demoNote">MODO DEMO con datos de ejemplo. PIN del dueño: 246810.</div>
+
+  <!-- LOGIN -->
+  <form class="panel" id="login">
+    <h2>Entrar</h2>
+    <label for="ownerPin">PIN del dueño</label>
+    <input id="ownerPin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" type="submit" style="margin-top:6px">Entrar</button>
+  </form>
+
+  <div id="dash" class="hidden">
+    <div class="tiles" id="tiles"></div>
+
+    <div class="panel">
+      <h2>Visitas por noche · últimas 2 semanas</h2>
+      <div class="chart" id="chart"></div>
+      <p class="muted" style="margin-top:8px">Cada sello cuenta como una visita. La noche va hasta las 6:00.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Clientes</h2>
+      <div class="tabs" id="tabs"></div>
+      <div class="tablewrap"><table><thead><tr><th>Nombre</th><th class="n">Visitas</th><th>Última visita</th><th>Estado</th><th>Contacto</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <p class="muted" style="margin-top:10px">El contacto solo aparece si el cliente aceptó recibir ofertas.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sec sm" id="copyCsv">Copiar contactos (CSV)</button>
+        <button class="btn sec sm" id="dlCsv">Descargar CSV</button>
+        <button class="btn sm" id="copyReport">Copiar informe del mes</button>
+      </div>
+      <div class="ok hidden" id="copied"></div>
+    </div>
+
+    <div class="panel">
+      <h2>QR para las mesas</h2>
+      <div class="row" style="align-items:flex-start;gap:16px">
+        <div id="qr"></div>
+        <div style="flex:1;min-width:200px">
+          <p class="muted">Los clientes escanean este QR para crear su tarjeta.</p>
+          <p style="word-break:break-all;margin:8px 0 12px;font-size:13px" id="cardUrl"></p>
+          <button class="btn sm" id="printBtn">Imprimir cartel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Ajustes</h2>
+      <label for="sReward">Premio</label><input id="sReward" maxlength="60">
+      <label for="sNeeded">Sellos para el premio</label>
+      <select id="sNeeded"></select>
+      <label for="sPin">Nuevo PIN de camareros (4–6 cifras, déjalo vacío para no cambiarlo)</label>
+      <input id="sPin" inputmode="numeric" maxlength="6">
+      <div class="err" id="setErr"></div><div class="ok hidden" id="setOk">Guardado.</div>
+      <button class="btn" id="saveBtn" style="margin-top:6px">Guardar ajustes</button>
+      <p class="muted" style="margin-top:10px">Cambia el PIN de camareros cada cierto tiempo, sobre todo si cambia el personal.</p>
+    </div>
+  </div>
+
+  <div class="poster">
+    <h1 id="pName">Old School Pub</h1>
+    <p id="pText">Escanea, crea tu tarjeta y consigue tu premio · Scan, get your card, earn a reward</p>
+    <div id="qrPrint"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const BAR = (params.get("bar") || (window.STAMP_CONFIG||{}).DEFAULT_BAR || "old-school").toLowerCase();
+let PIN = "", stats = null, members = [], tab = "all";
+if (API.demo) $("demoNote").classList.remove("hidden");
+
+const fmtDay = iso => { const d = new Date(iso + "T12:00:00"); return d.toLocaleDateString("es-ES",{weekday:"short", day:"numeric"}); };
+const ago = iso => {
+  if (!iso) return "—";
+  const days = Math.floor((Date.now() - new Date(iso)) / 864e5);
+  return days <= 0 ? "hoy" : days === 1 ? "ayer" : `hace ${days} días`;
+};
+const errMsg = e => ({bad_pin:"PIN incorrecto.",locked:"Demasiados intentos. Espera 10 minutos.",no_bar:"Este local no existe en la base de datos.",
+                      network:"Sin conexión con la base de datos.",pin_format:"El PIN debe tener 4–6 cifras."})[e] || "Error: " + e;
+function esc(s){ const d=document.createElement("div"); d.textContent = s ?? ""; return d.innerHTML; }
+
+$("login").addEventListener("submit", async e => {
+  e.preventDefault(); $("loginErr").textContent = "";
+  PIN = $("ownerPin").value.trim();
+  const ok = await load();
+  if (ok){ $("login").classList.add("hidden"); $("dash").classList.remove("hidden"); $("topBtns").classList.remove("hidden"); }
+});
+$("logoutBtn").onclick = () => location.reload();
+$("refreshBtn").onclick = load;
+
+async function load(){
+  const [s, m] = await Promise.all([API.call("owner_stats",{p_bar:BAR,p_pin:PIN}), API.call("owner_members",{p_bar:BAR,p_pin:PIN})]);
+  if (!s.ok){ $("loginErr").textContent = errMsg(s.error); return false; }
+  stats = s; members = m.ok ? m.members : [];
+  render(); return true;
+}
+
+function render(){
+  const s = stats;
+  $("barName").textContent = s.bar.name; $("pName").textContent = s.bar.name;
+  const retPct = s.members ? Math.round(100 * s.returning / s.members) : 0;
+  const tiles = [
+    [s.visits_tonight, "Visitas esta noche"],
+    [s.visits_7d, "Visitas · 7 días"],
+    [s.members, "Clientes con tarjeta"],
+    [s.joins_7d, "Nuevos · 7 días"],
+    [retPct + "%", "Repiten (2+ visitas)"],
+    [s.redeemed_30d, "Premios · 30 días"],
+    [s.inactive_14d, "Sin venir 14+ días"],
+    [s.opted_in, "Aceptan ofertas"]
+  ];
+  $("tiles").innerHTML = tiles.map(([v,l]) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`).join("");
+  drawChart(s.daily);
+  drawTabs(); drawRows();
+  $("sReward").value = s.bar.reward;
+  $("sNeeded").innerHTML = Array.from({length:19},(_,i)=>i+2).map(n=>`<option ${n===s.bar.stamps_needed?"selected":""}>${n}</option>`).join("");
+  drawQR();
+}
+
+function drawChart(daily){
+  const W = Math.max(300, Math.min(760, $("chart").clientWidth || 760)), H = 220, pl = 30, pb = 26, pt = 10, n = daily.length;
+  const every = W < 500 ? 3 : 2;
+  const max = Math.max(4, ...daily.map(d => d.visits));
+  const step = Math.ceil(max / 4), top = step * 4;
+  const bw = (W - pl) / n, barW = Math.min(30, bw * 0.6);
+  const y = v => pt + (H - pt - pb) * (1 - v / top);
+  let g = "";
+  for (let i = 0; i <= 4; i++){
+    const v = step * i, yy = y(v);
+    g += `<line x1="${pl}" x2="${W}" y1="${yy}" y2="${yy}" stroke="#3a2d22" stroke-width="1"/>`;
+    g += `<text x="${pl-6}" y="${yy+4}" fill="#a8957a" font-size="11" text-anchor="end">${v}</text>`;
+  }
+  daily.forEach((d, i) => {
+    const cx = pl + bw * i + bw / 2, h = (H - pt - pb) - (y(d.visits) - pt);
+    const x = cx - barW / 2, yTop = y(d.visits), r = Math.min(4, h);
+    if (d.visits > 0)
+      g += `<path d="M${x},${H-pb} V${yTop+r} Q${x},${yTop} ${x+r},${yTop} H${x+barW-r} Q${x+barW},${yTop} ${x+barW},${yTop+r} V${H-pb} Z" fill="#e9a23b"/>`;
+    g += `<rect class="hit" data-i="${i}" x="${pl + bw*i}" y="${pt}" width="${bw}" height="${H-pt-pb}" fill="transparent"/>`;
+    if ((n - 1 - i) % every === 0) g += `<text x="${cx}" y="${H-8}" fill="#a8957a" font-size="12" text-anchor="middle">${fmtDay(d.day)}</text>`;
+  });
+  $("chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Visitas por noche">${g}</svg><div class="tip hidden" id="tip"></div>`;
+  const tip = $("tip"), svg = $("chart").querySelector("svg");
+  svg.querySelectorAll(".hit").forEach(el => {
+    const showTip = () => {
+      const d = daily[+el.dataset.i], rect = svg.getBoundingClientRect(), sc = rect.width / W;
+      tip.innerHTML = `<b>${fmtDay(d.day)}</b> · ${d.visits} visitas · ${d.joins} nuevos`;
+      tip.style.left = ((pl + bw * +el.dataset.i + bw/2) * sc) + "px";
+      tip.style.top = (y(d.visits) * sc) + "px"; tip.classList.remove("hidden");
+    };
+    el.addEventListener("mouseenter", showTip); el.addEventListener("click", showTip);
+  });
+  svg.addEventListener("mouseleave", () => tip.classList.add("hidden"));
+}
+
+const FILTERS = {
+  all:      ["Todos", m => true],
+  regular:  ["Habituales (3+)", m => m.visits >= 3],
+  new:      ["Nuevos (7 días)", m => Date.now() - new Date(m.joined) < 7*864e5],
+  inactive: ["Sin venir 14+ días", m => Date.now() - new Date(m.last_visit || m.joined) > 14*864e5],
+  ready:    ["Premio listo", m => stats && m.stamps >= stats.bar.stamps_needed]
+};
+function drawTabs(){
+  $("tabs").innerHTML = Object.entries(FILTERS).map(([k,[l,f]]) =>
+    `<button data-k="${k}" class="${k===tab?"on":""}">${l} · ${members.filter(f).length}</button>`).join("");
+  $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => { tab = b.dataset.k; drawTabs(); drawRows(); });
+}
+function status(m){
+  if (stats && m.stamps >= stats.bar.stamps_needed) return '<span class="pill a">Premio listo</span>';
+  if (Date.now() - new Date(m.last_visit || m.joined) > 14*864e5) return '<span class="pill r">Inactivo</span>';
+  if (m.visits >= 3) return '<span class="pill g">Habitual</span>';
+  return `<span class="pill">${m.stamps}/${stats.bar.stamps_needed} sellos</span>`;
+}
+function drawRows(){
+  const list = members.filter(FILTERS[tab][1]);
+  $("rows").innerHTML = list.length ? list.map(m => `<tr><td>${esc(m.name)}</td><td class="n">${m.visits}</td><td>${ago(m.last_visit)}</td><td>${status(m)}</td><td class="muted">${m.contact ? esc(m.contact) : "—"}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="muted">Nadie en esta lista todavía.</td></tr>`;
+}
+
+function csv(){
+  const list = members.filter(FILTERS[tab][1]).filter(m => m.opted_in && m.contact);
+  const q = v => `"${String(v ?? "").replace(/"/g,'""')}"`;
+  return ["nombre,contacto,visitas,ultima_visita", ...list.map(m => [m.name, m.contact, m.visits, (m.last_visit||"").slice(0,10)].map(q).join(","))].join("\n");
+}
+function flash(msg){ const el = $("copied"); el.textContent = msg; el.classList.remove("hidden"); setTimeout(()=>el.classList.add("hidden"), 3000); }
+async function copy(text, msg){
+  try { await navigator.clipboard.writeText(text); flash(msg); }
+  catch(e){ flash("No se pudo copiar en este navegador."); }
+}
+$("copyCsv").onclick = () => copy(csv(), "Contactos de la lista actual copiados (solo los que aceptan ofertas).");
+$("dlCsv").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv()], {type:"text/csv"}));
+  a.download = `clientes-${BAR}-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+};
+$("copyReport").onclick = () => {
+  const s = stats, retPct = s.members ? Math.round(100 * s.returning / s.members) : 0;
+  const text = `${s.bar.name} · Tarjeta de sellos · últimos 30 días\n` +
+    `• Nuevos clientes con tarjeta: ${s.joins_30d}\n• Visitas registradas: ${s.visits_30d}\n` +
+    `• Premios canjeados: ${s.redeemed_30d}\n• Total clientes con tarjeta: ${s.members} (${retPct}% repiten)\n` +
+    `• Aceptan recibir ofertas: ${s.opted_in}\n• Sin venir 14+ días (para recuperar): ${s.inactive_14d}`;
+  copy(text, "Informe copiado. Pégalo en WhatsApp o en tu factura.");
+};
+
+function cardUrl(){ return new URL("index.html" + (BAR !== ((window.STAMP_CONFIG||{}).DEFAULT_BAR||"old-school") ? "?bar=" + BAR : ""), location.href).href; }
+function drawQR(){
+  const url = cardUrl(); $("cardUrl").textContent = url;
+  $("qr").innerHTML = ""; $("qrPrint").innerHTML = "";
+  if (window.QRCode){
+    new QRCode($("qr"), {text:url, width:360, height:360, correctLevel: QRCode.CorrectLevel.M});
+    new QRCode($("qrPrint"), {text:url, width:720, height:720, correctLevel: QRCode.CorrectLevel.M});
+  } else $("qr").textContent = "QR no disponible";
+  $("pText").textContent = `Escanea, crea tu tarjeta: ${stats.bar.stamps_needed} sellos = ${stats.bar.reward} · Scan, get your card, earn a reward`;
+}
+window.addEventListener("resize", () => { if (stats) drawChart(stats.daily); });
+$("printBtn").onclick = () => { try { window.print(); } catch(e){} };
+
+$("saveBtn").onclick = async () => {
+  $("setErr").textContent = ""; $("setOk").classList.add("hidden");
+  const r = await API.call("owner_update", {p_bar:BAR, p_pin:PIN, p_reward:$("sReward").value,
+    p_stamps_needed:+$("sNeeded").value, p_new_staff_pin:$("sPin").value.trim() || null});
+  if (!r.ok) return $("setErr").textContent = errMsg(r.error);
+  $("sPin").value = ""; $("setOk").classList.remove("hidden"); load();
+};
+</script>
+</body>
+</html>
