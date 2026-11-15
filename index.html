@@ -98,15 +98,24 @@
          animation:up .2s ease-out}
   .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--amber);border-radius:50%;margin:60px auto;animation:r 1s linear infinite}
   @keyframes r{to{transform:rotate(1turn)}}
+  .lang.inst{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:700}
+  .installbar{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:var(--bg2);border:1px solid var(--amber);
+       color:var(--paper);border-radius:12px;padding:12px 14px;margin-bottom:14px;font:500 14px "DM Sans";text-align:left;cursor:pointer}
+  .installbar b{color:var(--amber);font-size:22px;line-height:1}
+  .steps{margin-top:14px;display:grid;gap:10px}
+  .step{display:flex;gap:12px;align-items:center;background:#2c2219;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.35}
+  .step i{flex:none;width:28px;height:28px;border-radius:50%;background:var(--amber);color:var(--ink);font:700 15px "DM Sans";display:grid;place-items:center;font-style:normal}
+  .step svg{width:20px;height:20px;vertical-align:-4px;color:#7cb6ff}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="brand"><small data-t="tag">Stamp card</small><h1 id="barName">Old School Pub</h1></div>
-    <button class="lang" id="langBtn">EN</button>
+    <div style="display:flex;gap:6px;flex:none"><button class="lang inst hidden" id="instBtn">📲 App</button><button class="lang" id="langBtn">EN</button></div>
   </header>
   <div class="demo hidden" id="demoNote"></div>
+  <button class="installbar hidden" id="installBar"><span id="installBarTxt"></span><b>›</b></button>
 
   <div id="vLoading"><div class="spin"></div></div>
 
@@ -138,10 +147,18 @@
     </div>
     <button class="btn amber" id="stampBtn" data-t="stampBtn"></button>
     <button class="btn hidden" id="redeemBtn" data-t="redeemBtn"></button>
-    <div class="install hidden" id="install"></div>
     <p class="below"><a href="#" id="switchCard" data-t="notYou"></a></p>
   </section>
   <p class="below hidden" id="ownerLink"><a href="owner.html">Demo: panel del dueño / owner page →</a></p>
+</div>
+
+<!-- INSTALL SHEET -->
+<div class="sheet-bg hidden" id="instSheet">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <h3 id="instTitle"></h3>
+    <div class="steps" id="instSteps"></div>
+    <button class="btn amber" id="instClose" style="margin-top:14px"></button>
+  </div>
 </div>
 
 <!-- PIN SHEET -->
@@ -175,7 +192,11 @@ const T = {
       e_name:"Escribe tu nombre.",e_no_bar:"Este local no está configurado.",
       demo:"MODO DEMO: los datos solo se guardan en este móvil. PIN de camarero: 1234.",
       iosInstall:"📲 Guárdala como app: pulsa <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>.",
-      andInstall:"📲 Guárdala como app: menú <b>⋮</b> → <b>Añadir a pantalla de inicio</b>."},
+      andInstall:"📲 Guárdala como app: menú <b>⋮</b> → <b>Añadir a pantalla de inicio</b>.",
+      installBar:"📲 Instala la tarjeta como app en tu móvil",instTitle:"Instalar la app",gotIt:"Entendido",
+      iosS1:"Pulsa el botón <b>Compartir</b> {share} (abajo en Safari, o arriba en Chrome)",iosS2:"Baja y pulsa <b>Añadir a pantalla de inicio</b>",iosS3:"Pulsa <b>Añadir</b>. ¡Listo! 🍺",
+      andS1:"Pulsa el menú <b>⋮</b> arriba a la derecha",andS2:"Pulsa <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>",andS3:"Confirma. ¡Listo! 🍺",
+      inapp1:"Estás dentro de otra app (Instagram, WhatsApp…). Pulsa <b>⋯</b> o <b>⋮</b> arriba",inapp2:"Elige <b>Abrir en el navegador</b> (Safari o Chrome)",inapp3:"Allí pulsa otra vez <b>📲 App</b>"},
   en:{tag:"Stamp card",joinTitle:"Get your card",joinSub:"{n} stamps = {r}. One stamp per visit.",
       name:"Your name",contact:"Phone or email",
       consent:"I agree that {bar} stores my name and contact to run my stamp card.",
@@ -193,7 +214,11 @@ const T = {
       e_name:"Enter your name.",e_no_bar:"This venue isn't set up.",
       demo:"DEMO MODE: data is only saved on this phone. Staff PIN: 1234.",
       iosInstall:"📲 Save it as an app: tap <b>Share</b>, then <b>Add to Home Screen</b>.",
-      andInstall:"📲 Save it as an app: menu <b>⋮</b> → <b>Add to Home screen</b>."}
+      andInstall:"📲 Save it as an app: menu <b>⋮</b> → <b>Add to Home screen</b>.",
+      installBar:"📲 Install the card as an app on your phone",instTitle:"Install the app",gotIt:"Got it",
+      iosS1:"Tap the <b>Share</b> button {share} (bottom in Safari, top in Chrome)",iosS2:"Scroll down and tap <b>Add to Home Screen</b>",iosS3:"Tap <b>Add</b>. Done! 🍺",
+      andS1:"Tap the <b>⋮</b> menu at the top right",andS2:"Tap <b>Install app</b> or <b>Add to Home screen</b>",andS3:"Confirm. Done! 🍺",
+      inapp1:"You're inside another app (Instagram, WhatsApp…). Tap <b>⋯</b> or <b>⋮</b> at the top",inapp2:"Choose <b>Open in browser</b> (Safari or Chrome)",inapp3:"Then tap <b>📲 App</b> again"}
 };
 const $ = id => document.getElementById(id);
 const S = API.store;
@@ -254,12 +279,39 @@ function renderCard(animateNew){
   $("cardId").textContent = "#" + String(card.id).replace(/-/g,"").slice(-6).toUpperCase();
 }
 
+const UA = navigator.userAgent;
+const IOS = /iphone|ipad|ipod/i.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const ANDROID = /android/i.test(UA);
+const INAPP = /Instagram|FBAN|FBAV|FB_IAB|WhatsApp|Line\/|TikTok|musical_ly|Snapchat|; wv\)/i.test(UA);
+const STANDALONE = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; renderInstall(); });
+window.addEventListener("appinstalled", () => { deferredPrompt = null; renderInstall(); });
+const SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
 function renderInstall(){
-  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), android = /android/i.test(navigator.userAgent);
-  const el = $("install");
-  if (standalone || !(ios || android)){ el.classList.add("hidden"); return; }
-  el.innerHTML = ios ? t("iosInstall") : t("andInstall"); el.classList.remove("hidden");
+  const show = !STANDALONE() && (IOS || ANDROID || deferredPrompt);
+  $("instBtn").classList.toggle("hidden", !show);
+  $("installBar").classList.toggle("hidden", !show);
+  $("installBarTxt").textContent = t("installBar");
+}
+async function openInstall(){
+  if (deferredPrompt && !INAPP){
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch(e){}
+    deferredPrompt = null; renderInstall(); return;
+  }
+  const keys = INAPP ? ["inapp1","inapp2","inapp3"] : IOS ? ["iosS1","iosS2","iosS3"] : ["andS1","andS2","andS3"];
+  $("instTitle").textContent = t("instTitle");
+  $("instSteps").innerHTML = keys.map((k,i) => `<div class="step"><i>${i+1}</i><span>${t(k,{share:SHARE_ICON})}</span></div>`).join("");
+  $("instClose").textContent = t("gotIt");
+  $("instSheet").classList.remove("hidden");
+}
+$("instBtn").onclick = openInstall;
+$("installBar").onclick = openInstall;
+$("instClose").onclick = () => $("instSheet").classList.add("hidden");
+$("instSheet").addEventListener("click", e => { if (e.target.id === "instSheet") $("instSheet").classList.add("hidden"); });
+if ("serviceWorker" in navigator && location.protocol === "https:"){
+  navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
 // ---- join ----
